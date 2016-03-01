@@ -1,4 +1,4 @@
-return array(
+array(
     'twilio' => array(
         'account_sid'  => 'YOUR-ACCOUNT-SID',
         'auth_token'   => 'YOUR-AUTH-TOKEN',

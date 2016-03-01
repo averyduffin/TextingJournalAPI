@@ -12,6 +12,10 @@ CREATE TABLE textingjournal.`users` (
 `password` varchar(240),
 `phonenumber` varchar(240),
 `timezone` varchar(240),
+
+`profilepic` varchar(240),
+`backgroundpic` varchar(240),
+
 `questionfrequencyid` int(11) NOT NULL,
 PRIMARY KEY (`id`),
 FOREIGN KEY (questionfrequencyid) REFERENCES questionfrequency(id)
@@ -32,6 +36,13 @@ CREATE TABLE textingjournal.`entries` (
 `phonenumber`  varchar(240),
 `questionid` int(11) NOT NULL,
 `userid` int(11) NOT NULL,
+
+`messageSid` varchar(240),
+`smsid` varchar(240),
+`accountsid` varchar(240),
+`messagingservicesid` varchar(240),
+`nummedia` int(11),
+
 PRIMARY KEY (`id`),
 FOREIGN KEY (questionid) REFERENCES question(id),
 FOREIGN KEY (userid) REFERENCES users(id)

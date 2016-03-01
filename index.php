@@ -39,12 +39,18 @@ require 'twilio-php-master/Services/Twilio.php';
  * of setting names and values into the application constructor.
  */
 //$app = new \Slim\Slim();
-//$config = require '../api/includes/config.php';
+$config = array(
+    'twilio' => array(
+        'account_sid'  => 'AC53d97902672ef59e5d89d0520bd7a7bc',
+        'auth_token'   => '3c699c6a5bfc442fd9e7cc530a53d220',
+        'phone_number' => '+13852090140',
+    ),
+);
 // instantiate the Twilio client	
-//$twilio = new Services_Twilio(				
-//    $config['twilio']['account_sid'],
-//    $config['twilio']['auth_token']
-//);
+$twilio = new Services_Twilio(				
+    $config['twilio']['account_sid'],
+    $config['twilio']['auth_token']
+);
 $app = new \Slim\Slim(array(
         ));
 
@@ -85,12 +91,13 @@ $app->get('/entries/:id','getEntry');
 
 $app->get('/questions/','getQuestions');
 $app->get('/frequency/','getFrequency');
+
 // POST route
 $app->post('/user','addUser');
 $app->post('/user','addEntry');
 
 $app->post('/receiveText','setText');
-
+$app->post('/send', 'sendMessage');
 // PUT route
 //$app->put('/participants','addUser');
 $app->put('/receiveText','setText');
@@ -289,7 +296,7 @@ function setText(){
 		$userid = 3;
 		
 		
-    $sql = "INSERT INTO entries_dev (`datetime`,`phonenumber`, `text`, `questionid`, `userid`) VALUES (:datetime, :phonenumber, :text, :questionid, :userid)";
+    $sql = "INSERT INTO entries_dev (`datetime`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) VALUES (:datetime, :phonenumber, :text, :questionid, :userid, :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -298,6 +305,12 @@ function setText(){
         $stmt->bindParam("text", $Body);
 		$stmt->bindParam("questionid", $questionid);
 		$stmt->bindParam("userid", $userid);
+		
+		$stmt->bindParam("messageSid", $MessageSid);
+		$stmt->bindParam("smsid", $SmsSid);
+		$stmt->bindParam("accountsid", $AccountSid);
+		$stmt->bindParam("messagingservicesid", $MessagingServiceSid);
+		$stmt->bindParam("nummedia", $NumMedia);
         $stmt->execute();
         $dbCon = null;
 		echo '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Journal entry recieved. Check website to view all entries.</Message></Response>';
@@ -307,4 +320,29 @@ function setText(){
         echo '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Journal Message wasnt recieved, please try and resend it later.</Message></Response>';
     }  
         
+}
+
+function sendMessage(){
+	global $twilio;
+	global $config;
+	global $app;
+	$app->response()->header("Content-Type", "application/json");
+    $post = json_decode($app->request()->getBody());
+	$number = $post->number;
+	$message = $post->message;
+	
+	//$sender  = "+18012101494";
+	//$response = "Here's a text!";
+	try {
+		$sms = $twilio->account->sms_messages->create(
+			$config['twilio']['phone_number'],  // the number to send from
+			$number,
+			$message
+		);
+		echo '{"Success": "200"}';
+    }
+    catch(Exception $e) {
+        echo '{"error":{"text":'. $e->getMessage() .'}}';
+    }    
+	
 }
