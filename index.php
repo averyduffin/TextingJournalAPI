@@ -5,13 +5,13 @@
  */
  
 function getConnection() {
+	global $conn;
     try {
-        $db_username = "texting_user";
-        $db_password = "34dfrigkcf$98RF(*S";
-		$db_string = 'mysql:host=localhost:3307;dbname=textingjournal';
+        $db_username = "textjoun_user";
+        $db_password = "onCo256*";
+		$db_string = 'mysql:host=198.71.227.91:3306;dbname=averyduffin_textingjournal';
         $conn = new PDO($db_string, $db_username, $db_password);
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
- 
     } catch(PDOException $e) {
         echo 'ERROR: ' . $e->getMessage();
     }
@@ -26,6 +26,7 @@ function getConnection() {
  * If you are using Composer, you can skip this step.
  */
 require 'Slim/Slim.php';
+require 'twilio-php-master/Services/Twilio.php';
 
 \Slim\Slim::registerAutoloader();
 
@@ -38,6 +39,12 @@ require 'Slim/Slim.php';
  * of setting names and values into the application constructor.
  */
 //$app = new \Slim\Slim();
+//$config = require '../api/includes/config.php';
+// instantiate the Twilio client	
+//$twilio = new Services_Twilio(				
+//    $config['twilio']['account_sid'],
+//    $config['twilio']['auth_token']
+//);
 $app = new \Slim\Slim(array(
         ));
 
@@ -82,8 +89,11 @@ $app->get('/frequency/','getFrequency');
 $app->post('/user','addUser');
 $app->post('/user','addEntry');
 
+$app->post('/receiveText','setText');
+
 // PUT route
 //$app->put('/participants','addUser');
+$app->put('/receiveText','setText');
 
 // PATCH route
 $app->patch('/participants', function () { echo 'This is a PATCH route';});
@@ -105,8 +115,7 @@ $app->run();
  */
 function getUsers() {
 	global $app;
-
-    $sql_query = "select * FROM users ORDER BY id";
+    $sql_query = "select * FROM users_dev ORDER BY id";
     try {
         $dbCon = getConnection();
         $stmt   = $dbCon->query($sql_query);
@@ -121,7 +130,7 @@ function getUsers() {
 
 function getUser($id) {
 	global $app;
-    $sql = "select * FROM users WHERE id=:id";
+    $sql = "select * FROM users_dev WHERE id=:id";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -147,7 +156,7 @@ function addUser() {
 	$questionFrequency = $post->questionFrequency;
 	$timezone = $post->timezone;
 	
-    $sql = "INSERT INTO users (`fullname`,`phonenumber`,`emailaddress`, `username`, `password`, `timezone`, `questionfrequencyid`) VALUES (:fullname, :phonenumber, :emailaddress, :username, :password, :timezone, :questionfrequencyid)";
+    $sql = "INSERT INTO users_dev (`fullname`,`phonenumber`,`emailaddress`, `username`, `password`, `timezone`, `questionfrequencyid`) VALUES (:fullname, :phonenumber, :emailaddress, :username, :password, :timezone, :questionfrequencyid)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -172,7 +181,7 @@ function addUser() {
 function getEntries() {
 	global $app;
 
-    $sql_query = "select * FROM entries ORDER BY id";
+    $sql_query = "select * FROM entries_dev ORDER BY id";
     try {
         $dbCon = getConnection();
         $stmt   = $dbCon->query($sql_query);
@@ -187,7 +196,7 @@ function getEntries() {
 
 function getEntry($id) {
 	global $app;
-    $sql = "select * FROM entries WHERE userid=:id";
+    $sql = "select * FROM entries_dev WHERE userid=:id";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -212,7 +221,7 @@ function addEntry() {
 	$questionid = $post->questionid;
 	$userid = $post->userid;
 	
-    $sql = "INSERT INTO entries (`datetime`,`phonenumber`, `text`, `questionid`, `userid`) VALUES (:datetime, :phonenumber, :text, :questionid, :userid)";
+    $sql = "INSERT INTO entries_dev (`datetime`,`phonenumber`, `text`, `questionid`, `userid`) VALUES (:datetime, :phonenumber, :text, :questionid, :userid)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -233,7 +242,7 @@ function addEntry() {
 function getQuestions() {
 	global $app;
 
-    $sql_query = "select * FROM question ORDER BY id";
+    $sql_query = "select * FROM question_dev ORDER BY id";
     try {
         $dbCon = getConnection();
         $stmt   = $dbCon->query($sql_query);
@@ -243,14 +252,14 @@ function getQuestions() {
     }
     catch(PDOException $e) {
         echo '{"error":{"text":'. $e->getMessage() .'}}';
-    }    
+    }   
 }
 
 
 function getFrequency() {
 	global $app;
 
-    $sql_query = "select * FROM questionfrequency ORDER BY id";
+    $sql_query = "select * FROM questionfrequency_dev ORDER BY id";
     try {
         $dbCon = getConnection();
         $stmt   = $dbCon->query($sql_query);
@@ -261,4 +270,41 @@ function getFrequency() {
     catch(PDOException $e) {
         echo '{"error":{"text":'. $e->getMessage() .'}}';
     }    
+}
+
+function setText(){
+       global $app;
+	   $app->response()->header("Content-Type", "text/xml");
+		$post = $app->request();
+		$MessageSid = $post->post('MessageSid');
+		$SmsSid = $post->post('SmsSid');
+		$AccountSid = $post->post('AccountSid');
+		$MessagingServiceSid = $post->post('MessagingServiceSid');
+		$From = $post->post('From');
+		$To	 = $post->post('To');
+		$Body = $post->post('Body');
+		$NumMedia = $post->post('NumMedia');
+		$datetime = date("m-d-Y h:i:sa");
+		$questionid = 1;
+		$userid = 3;
+		
+		
+    $sql = "INSERT INTO entries_dev (`datetime`,`phonenumber`, `text`, `questionid`, `userid`) VALUES (:datetime, :phonenumber, :text, :questionid, :userid)";
+    try {
+        $dbCon = getConnection();
+        $stmt = $dbCon->prepare($sql);  
+        $stmt->bindParam("datetime", $datetime);
+        $stmt->bindParam("phonenumber", $From);
+        $stmt->bindParam("text", $Body);
+		$stmt->bindParam("questionid", $questionid);
+		$stmt->bindParam("userid", $userid);
+        $stmt->execute();
+        $dbCon = null;
+		echo '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Journal entry recieved. Check website to view all entries.</Message></Response>';
+		//return $app -> render('response.xml');
+    }
+    catch(PDOException $e) {
+        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Journal Message wasnt recieved, please try and resend it later.</Message></Response>';
+    }  
+        
 }
