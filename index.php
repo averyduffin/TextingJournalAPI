@@ -93,8 +93,8 @@ $app->get('/questions/','getQuestions');
 $app->get('/frequency/','getFrequency');
 
 // POST route
-$app->post('/user','addUser');
-$app->post('/user','addEntry');
+$app->post('/users','addUser');
+$app->post('/entries','addEntry');
 
 $app->post('/receiveText','setText');
 $app->post('/send', 'sendMessage');
