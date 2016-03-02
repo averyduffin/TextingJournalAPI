@@ -98,6 +98,8 @@ $app->post('/entries','addEntry');
 
 $app->post('/receiveText','setText');
 $app->post('/send', 'sendMessage');
+
+$app->post('/authenticate', 'authenticate');
 // PUT route
 //$app->put('/participants','addUser');
 $app->put('/receiveText','setText');
@@ -345,4 +347,26 @@ function sendMessage(){
         echo '{"error":{"text":'. $e->getMessage() .'}}';
     }    
 	
+}
+
+function authenticate(){
+	global $app;
+	$app->response()->header("Content-Type", "application/json");
+    $post = json_decode($app->request()->getBody());
+	$username = $post->username;
+	$password = $post->password;
+	
+    $sql = "select id FROM users_dev WHERE username=:username AND password=:password";
+    try {
+        $dbCon = getConnection();
+        $stmt = $dbCon->prepare($sql);  
+        $stmt->bindParam("username", $username);
+        $stmt->bindParam("password", $password);
+        $stmt->execute();
+        $id  = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $dbCon = null;
+        echo '{"id": ' . json_encode($id) . '}';
+    } catch(PDOException $e) {
+        echo '{"error":{"text":'. $e->getMessage() .'}}'; 
+    }
 }

@@ -17,6 +17,7 @@ CREATE TABLE textingjournal.`users` (
 `backgroundpic` varchar(240),
 
 `questionfrequencyid` int(11) NOT NULL,
+`isDeleted` int(2),
 PRIMARY KEY (`id`),
 FOREIGN KEY (questionfrequencyid) REFERENCES questionfrequency(id)
 )
@@ -42,7 +43,7 @@ CREATE TABLE textingjournal.`entries` (
 `accountsid` varchar(240),
 `messagingservicesid` varchar(240),
 `nummedia` int(11),
-
+`isDeleted` int(2),
 PRIMARY KEY (`id`),
 FOREIGN KEY (questionid) REFERENCES question(id),
 FOREIGN KEY (userid) REFERENCES users(id)
