@@ -100,6 +100,7 @@ $app->post('/receiveText','setText');
 $app->post('/send', 'sendMessage');
 
 $app->post('/authenticate', 'authenticate');
+$app->post('/checknumber', 'checkNumber');
 // PUT route
 //$app->put('/participants','addUser');
 $app->put('/receiveText','setText');
@@ -366,6 +367,27 @@ function authenticate(){
         $id  = $stmt->fetchAll(PDO::FETCH_OBJ);
         $dbCon = null;
         echo '{"id": ' . json_encode($id) . '}';
+    } catch(PDOException $e) {
+        echo '{"error":{"text":'. $e->getMessage() .'}}'; 
+    }
+}
+
+function checkNumber(){
+	global $app;
+	$app->response()->header("Content-Type", "application/json");
+    $post = json_decode($app->request()->getBody());
+	$phonenumber = $post->phonenumber;
+	
+    $sql = "select COUNT(id) FROM users_dev WHERE phonenumber=:phonenumber";
+    try {
+        $dbCon = getConnection();
+        $stmt = $dbCon->prepare($sql);  
+        $stmt->bindParam("phonenumber", $phonenumber);
+        $stmt->execute();
+        $count  = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $dbCon = null;
+		$countValue = current($count[0]);
+        echo '{"count": ' . json_encode($countValue) . '}';
     } catch(PDOException $e) {
         echo '{"error":{"text":'. $e->getMessage() .'}}'; 
     }
