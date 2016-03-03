@@ -299,7 +299,7 @@ function setText(){
 		$userid = 3;
 		
 		
-    $sql = "INSERT INTO entries_dev (`datetime`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) VALUES (:datetime, :phonenumber, :text, :questionid, :userid, :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
+    $sql = "INSERT INTO entries_dev (`datetime`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) VALUES (:datetime, :phonenumber, :text, :questionid, (select id FROM users_dev WHERE username=:phonenumber) , :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -307,7 +307,7 @@ function setText(){
         $stmt->bindParam("phonenumber", $From);
         $stmt->bindParam("text", $Body);
 		$stmt->bindParam("questionid", $questionid);
-		$stmt->bindParam("userid", $userid);
+		//$stmt->bindParam("userid", $userid);
 		
 		$stmt->bindParam("messageSid", $MessageSid);
 		$stmt->bindParam("smsid", $SmsSid);
@@ -357,7 +357,7 @@ function authenticate(){
 	$username = $post->username;
 	$password = $post->password;
 	
-    $sql = "select id FROM users_dev WHERE username=:username AND password=:password";
+    $sql = "select id, backgroundpic,profilepic, fullname, phonenumber FROM users_dev WHERE username=:username AND password=:password";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
