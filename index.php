@@ -95,6 +95,7 @@ $app->get('/questions/','getQuestions');
 $app->get('/frequency/','getFrequency');
 
 // POST route
+$app->post('/questions/','addQuestions');
 $app->post('/questiondate', 'addQuestionDate');
 $app->post('/users','addUser');
 $app->post('/entries','addEntry');
@@ -215,7 +216,7 @@ function getEntriesByID($id) {
 		$beforeDate = $post->beforeDate;
 		$afterDate = $post->afterDate;
 
-	$sql = "select * FROM entries_dev WHERE userid=:id AND date<=:before  AND date>=:after ORDER BY id DESC";
+	$sql = "select entries_dev.date, entries_dev.text, question_dev.question  FROM entries_dev INNER JOIN questiondate_dev ON entries_dev.questionid=questiondate_dev.id INNER JOIN question_dev ON questiondate_dev.questionid = question_dev.id  WHERE entries_dev.userid=:id AND entries_dev.date<=:before  AND entries_dev.date>=:after ORDER BY entries_dev.id DESC";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -225,7 +226,7 @@ function getEntriesByID($id) {
         $stmt->execute();
         $users  = $stmt->fetchAll(PDO::FETCH_OBJ);  
         $dbCon = null;
-        echo json_encode($users); 
+        echo '{"entries": ' .json_encode($users) . '}'; 
     } catch(PDOException $e) {
         echo '{"error":{"text":'. $e->getMessage() .'}}'; 
     }
@@ -293,6 +294,26 @@ function getQuestions() {
     }   
 }
 
+function addQuestions(){
+	global $app;
+	global $app;
+	$app->response()->header("Content-Type", "application/json");
+    $post = json_decode($app->request()->getBody());
+	$question = $post->question;
+	
+    $sql = "INSERT INTO question_dev (`question`) VALUES ( :question)";
+    try {
+        $dbCon = getConnection();
+        $stmt = $dbCon->prepare($sql);  
+        $stmt->bindParam("question", $question);
+        $stmt->execute();
+        $dbCon = null;
+        echo '{"Success" : "Success"}'; 
+    }
+    catch(PDOException $e) {
+        echo '{"error":{"text":'. $e->getMessage() .'}}';
+    }   
+}
 
 function getFrequency() {
 	global $app;
@@ -439,3 +460,4 @@ function addQuestionDate(){
         echo '{"error":{"text":'. $e->getMessage() .'}}'; 
     }
 }
+
