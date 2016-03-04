@@ -87,14 +87,18 @@ $app->get('/users/','getUsers');
 $app->get('/users/:id','getUser');
 
 $app->get('/entries/','getEntries');
-$app->get('/entries/:id','getEntry');
+
+$app->get('/entry/:id','getEntry');
+
 
 $app->get('/questions/','getQuestions');
 $app->get('/frequency/','getFrequency');
 
 // POST route
+$app->post('/questiondate', 'addQuestionDate');
 $app->post('/users','addUser');
 $app->post('/entries','addEntry');
+$app->post('/entries/:id','getEntriesByID');
 
 $app->post('/receiveText','setText');
 $app->post('/send', 'sendMessage');
@@ -204,6 +208,29 @@ function getEntries() {
     }    
 }
 
+function getEntriesByID($id) {
+	global $app;
+	$app->response()->header("Content-Type", "application/json");
+		$post = json_decode($app->request()->getBody());
+		$beforeDate = $post->beforeDate;
+		$afterDate = $post->afterDate;
+
+	$sql = "select * FROM entries_dev WHERE userid=:id AND date<=:before  AND date>=:after ORDER BY id DESC";
+    try {
+        $dbCon = getConnection();
+        $stmt = $dbCon->prepare($sql);  
+        $stmt->bindParam("id", $id);
+		$stmt->bindParam("before", $beforeDate);
+		$stmt->bindParam("after", $afterDate);
+        $stmt->execute();
+        $users  = $stmt->fetchAll(PDO::FETCH_OBJ);  
+        $dbCon = null;
+        echo json_encode($users); 
+    } catch(PDOException $e) {
+        echo '{"error":{"text":'. $e->getMessage() .'}}'; 
+    }
+}
+
 function getEntry($id) {
 	global $app;
     $sql = "select * FROM entries_dev WHERE userid=:id";
@@ -221,21 +248,22 @@ function getEntry($id) {
 }
 
 
+
+
+
 function addEntry() {
 	global $app;
 	$app->response()->header("Content-Type", "application/json");
     $post = json_decode($app->request()->getBody());
-	$datetime = $post->datetime;
 	$phonenumber = $post->phonenumber;
 	$text = $post->text;
 	$questionid = $post->questionid;
 	$userid = $post->userid;
 	
-    $sql = "INSERT INTO entries_dev (`datetime`,`phonenumber`, `text`, `questionid`, `userid`) VALUES (:datetime, :phonenumber, :text, :questionid, :userid)";
+    $sql = "INSERT INTO entries_dev (`date`,`phonenumber`, `text`, `questionid`, `userid`) VALUES (NOW(), :phonenumber, :text, :questionid, :userid)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
-        $stmt->bindParam("datetime", $datetime);
         $stmt->bindParam("phonenumber", $phonenumber);
         $stmt->bindParam("text", $text);
 		$stmt->bindParam("questionid", $questionid);
@@ -294,20 +322,19 @@ function setText(){
 		$To	 = $post->post('To');
 		$Body = $post->post('Body');
 		$NumMedia = $post->post('NumMedia');
-		$datetime = date("m-d-Y h:i:sa");
+
 		$questionid = 1;
-		$userid = 3;
 		
 		
-    $sql = "INSERT INTO entries_dev (`datetime`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) VALUES (:datetime, :phonenumber, :text, :questionid, (select id FROM users_dev WHERE username=:phonenumber) , :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
+    $sql = "INSERT INTO entries_dev (`date`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) VALUES (NOW(), :phonenumber, :text, (select id FROM questiondate_dev WHERE date=CURRENT_DATE()), (select id FROM users_dev WHERE username=:phonenumber) , :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
-        $stmt->bindParam("datetime", $datetime);
+
+		
         $stmt->bindParam("phonenumber", $From);
         $stmt->bindParam("text", $Body);
-		$stmt->bindParam("questionid", $questionid);
-		//$stmt->bindParam("userid", $userid);
+		//$stmt->bindParam("questionid", $questionid);
 		
 		$stmt->bindParam("messageSid", $MessageSid);
 		$stmt->bindParam("smsid", $SmsSid);
@@ -388,6 +415,26 @@ function checkNumber(){
         $dbCon = null;
 		$countValue = current($count[0]);
         echo '{"count": ' . json_encode($countValue) . '}';
+    } catch(PDOException $e) {
+        echo '{"error":{"text":'. $e->getMessage() .'}}'; 
+    }
+}
+
+function addQuestionDate(){
+	global $app;
+	$app->response()->header("Content-Type", "application/json");
+    $post = json_decode($app->request()->getBody());
+	$questionid = $post->id;
+	
+    $sql = "INSERT INTO questiondate_dev (`date`, `questionid`) VALUES (NOW(), :questionid)";
+    try {
+        $dbCon = getConnection();
+        $stmt = $dbCon->prepare($sql);  
+        $stmt->bindParam("questionid", $questionid);;
+        $stmt->execute();
+        //$user->id = $dbCon->lastInsertId();
+        $dbCon = null;
+        echo json_encode("Success"); 
     } catch(PDOException $e) {
         echo '{"error":{"text":'. $e->getMessage() .'}}'; 
     }

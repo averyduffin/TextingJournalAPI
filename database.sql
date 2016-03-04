@@ -32,7 +32,7 @@ PRIMARY KEY (`id`)
 
 CREATE TABLE textingjournal.`entries` ( 
 `id` int(11) NOT NULL AUTO_INCREMENT,
-`datetime`  varchar(240),
+`date` DATE NOT NULL,
 `text`  varchar(240),
 `phonenumber`  varchar(240),
 `questionid` int(11) NOT NULL,
@@ -45,6 +45,14 @@ CREATE TABLE textingjournal.`entries` (
 `nummedia` int(11),
 `isDeleted` int(2),
 PRIMARY KEY (`id`),
-FOREIGN KEY (questionid) REFERENCES question(id),
+FOREIGN KEY (questionid) REFERENCES questiondate(id),
 FOREIGN KEY (userid) REFERENCES users(id)
+)
+
+CREATE TABLE textingjournal.`questiondate` ( 
+`id` int(11) NOT NULL AUTO_INCREMENT,
+`questionid`  varchar(240),
+`date` DATE NOT NULL,
+PRIMARY KEY (`id`),
+FOREIGN KEY (questionid) REFERENCES question(id),
 )
