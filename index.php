@@ -94,6 +94,8 @@ $app->get('/entry/:id','getEntry');
 $app->get('/questions/','getQuestions');
 $app->get('/frequency/','getFrequency');
 
+$app->get('/randomQuestion', 'getRandom');
+
 // POST route
 $app->post('/questions/','addQuestions');
 $app->post('/questiondate', 'addQuestionDate');
@@ -315,6 +317,22 @@ function addQuestions(){
     }   
 }
 
+function getRandom(){
+	global $app;
+
+    $sql_query = "select * FROM question_dev ORDER BY RAND() LIMIT 1";
+    try {
+        $dbCon = getConnection();
+        $stmt   = $dbCon->query($sql_query);
+        $users  = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $dbCon = null;
+        echo '{"question": ' . json_encode($users) . '}';
+    }
+    catch(PDOException $e) {
+        echo '{"error":{"text":'. $e->getMessage() .'}}';
+    }   
+}
+
 function getFrequency() {
 	global $app;
 
@@ -347,7 +365,7 @@ function setText(){
 		$questionid = 1;
 		
 		
-    $sql = "INSERT INTO entries_dev (`date`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) VALUES (NOW(), :phonenumber, :text, (select id FROM questiondate_dev WHERE date=CURRENT_DATE()), (select id FROM users_dev WHERE username=:phonenumber) , :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
+    $sql = "INSERT INTO entries_dev (`date`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) VALUES (NOW(), :phonenumber, :text, (select id FROM questiondate_dev WHERE date=CURRENT_DATE() ORDER BY id  desc LIMIT 1), (select id FROM users_dev WHERE username=:phonenumber ) , :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -379,11 +397,12 @@ function sendMessage(){
 	global $app;
 	$app->response()->header("Content-Type", "application/json");
     $post = json_decode($app->request()->getBody());
+	
 	$number = $post->number;
 	$message = $post->message;
 	
-	//$sender  = "+18012101494";
-	//$response = "Here's a text!";
+	//$number  = "+18012101494";
+	//$message = "Changed!";
 	try {
 		$sms = $twilio->account->sms_messages->create(
 			$config['twilio']['phone_number'],  // the number to send from
