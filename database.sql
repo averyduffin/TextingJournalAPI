@@ -37,7 +37,7 @@ CREATE TABLE textingjournal.`entries` (
 `phonenumber`  varchar(240),
 `questionid` int(11) NOT NULL,
 `userid` int(11) NOT NULL,
-
+`about` varchar(240),
 `messageSid` varchar(240),
 `smsid` varchar(240),
 `accountsid` varchar(240),
