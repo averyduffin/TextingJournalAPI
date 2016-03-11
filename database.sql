@@ -11,7 +11,7 @@ CREATE TABLE textingjournal.`users` (
 `username` varchar(240), 
 `password` varchar(240),
 `phonenumber` varchar(240),
-`timezone` varchar(240),
+`timezone` DATE NOT NULL,
 
 `profilepic` varchar(240),
 `backgroundpic` varchar(240),
@@ -56,3 +56,37 @@ CREATE TABLE textingjournal.`questiondate` (
 PRIMARY KEY (`id`),
 FOREIGN KEY (questionid) REFERENCES question(id),
 )
+
+DELIMITER $$
+CREATE PROCEDURE averyduffin_textingjournal.`UpdateUser`
+(
+IN id_i int(11),
+IN fullname_i  varchar(240), 
+IN emailaddress_i varchar(240),
+IN username_i varchar(240), 
+IN password_i varchar(240),
+IN phonenumber_i varchar(240),
+IN profilepic_i varchar(240),
+IN backgroundpic_i varchar(240),
+IN questionfrequencyid_i int(11) ,
+IN about_i varchar(240)
+)
+BEGIN
+
+  UPDATE averyduffin_textingjournal.users_dev 
+  SET fullname=fullname_i,
+  phonenumber=phonenumber_i,
+  emailaddress= emailaddress_i, 
+  username=username_i, 
+  password=password_i, 
+  timezone=NOW(), 
+  questionfrequencyid=questionfrequencyid_i, 
+  about=about_i, 
+  profilepic=profilepic_i, 
+  backgroundpic=backgroundpic_i 
+  WHERE `id`=id_i;
+  
+  SELECT * FROM averyduffin_textingjournal.users_dev
+  WHERE `id`=id_i;
+END $$
+DELIMITER ;

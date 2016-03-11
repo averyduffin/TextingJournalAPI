@@ -12,6 +12,7 @@ function getConnection() {
 		$db_string = 'mysql:host=198.71.227.91:3306;dbname=averyduffin_textingjournal';
         $conn = new PDO($db_string, $db_username, $db_password);
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		//$conn->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY , 1);
     } catch(PDOException $e) {
         echo 'ERROR: ' . $e->getMessage();
     }
@@ -102,6 +103,7 @@ $app->post('/questiondate', 'addQuestionDate');
 $app->post('/users','addUser');
 $app->post('/entries','addEntry');
 $app->post('/entries/:id','getEntriesByID');
+$app->post('/users/:id','updateUser');
 
 $app->post('/receiveText','setText');
 $app->post('/send', 'sendMessage');
@@ -111,6 +113,7 @@ $app->post('/checknumber', 'checkNumber');
 // PUT route
 //$app->put('/participants','addUser');
 $app->put('/receiveText','setText');
+
 
 // PATCH route
 $app->patch('/participants', function () { echo 'This is a PATCH route';});
@@ -161,6 +164,48 @@ function getUser($id) {
     }
 }
 
+function updateUser($id){
+	global $app;
+	$app->response()->header("Content-Type", "application/json");
+    $post = json_decode($app->request()->getBody());
+	//$id = $post->id;
+	$name = $post->fullname;
+	$phone = $post->phonenumber;
+	$email = $post->emailaddress;
+	$username = $post->username;
+	$password = $post->password;
+	$questionFrequency = $post->questionfrequencyid;
+	$about = $post->about;
+	$profilepic = $post->profilepic;
+	$backgroundpic = $post->backgroundpic;
+	
+	
+    $sql = "CALL UpdateUser(:id, :fullname, :emailaddress, :username, :password, :phonenumber, :profilepic, :backgroundpic, :questionfrequencyid, :about)";
+	try {
+        $dbCon = getConnection();
+        $stmt = $dbCon->prepare($sql);  
+        $stmt->bindParam("fullname", $name);
+        $stmt->bindParam("phonenumber", $phone);
+		$stmt->bindParam("emailaddress", $email);
+        $stmt->bindParam("username", $username);
+		$stmt->bindParam("password", $password);
+		$stmt->bindParam("id", $id);
+		$stmt->bindParam("questionfrequencyid", $questionFrequency);
+		$stmt->bindParam("about", $about);
+		$stmt->bindParam("profilepic", $profilepic);
+		$stmt->bindParam("backgroundpic", $backgroundpic);
+        $success = $stmt->execute();
+		$user = $stmt->fetchObject();  
+
+		
+        $dbCon = null;	
+		
+        echo json_encode($user); 
+    } catch(PDOException $e) {
+        echo '{"error":{"text":'. $e->getMessage() .'}}'; 
+    }
+}
+
 function addUser() {
 	global $app;
 	$app->response()->header("Content-Type", "application/json");
@@ -171,9 +216,9 @@ function addUser() {
 	$username = $post->username;
 	$password = $post->password;
 	$questionFrequency = $post->questionFrequency;
-	$timezone = $post->timezone;
+	//$timezone = $post->timezone;
 	
-    $sql = "INSERT INTO users_dev (`fullname`,`phonenumber`,`emailaddress`, `username`, `password`, `timezone`, `questionfrequencyid`) VALUES (:fullname, :phonenumber, :emailaddress, :username, :password, :timezone, :questionfrequencyid)";
+    $sql = "INSERT INTO users_dev (`fullname`,`phonenumber`,`emailaddress`, `username`, `password`, `timezone`, `questionfrequencyid`) VALUES (:fullname, :phonenumber, :emailaddress, :username, :password, NOW(), :questionfrequencyid)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -182,7 +227,7 @@ function addUser() {
 		$stmt->bindParam("emailaddress", $email);
         $stmt->bindParam("username", $username);
 		$stmt->bindParam("password", $password);
-		$stmt->bindParam("timezone", $timezone);
+		//$stmt->bindParam("timezone", $timezone);
 		$stmt->bindParam("questionfrequencyid", $questionFrequency);
         $stmt->execute();
         //$user->id = $dbCon->lastInsertId();
