@@ -90,3 +90,62 @@ BEGIN
   WHERE `id`=id_i;
 END $$
 DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE averyduffin_textingjournal.`setEntry`
+(
+IN `text_i`  varchar(240),
+IN `phonenumber_i`  varchar(240),
+IN `messageSid_i` varchar(240),
+IN `smsid_i` varchar(240),
+IN `accountsid_i` varchar(240),
+IN `messagingservicesid_i` varchar(240),
+IN `nummedia_i` int(11)
+)
+BEGIN
+  DECLARE questionID int(11);
+  DECLARE finalID int(11);
+  DECLARE userIDvar int(11);
+
+  select id INTO questionID
+  FROM averyduffin_textingjournal.questiondate_dev 
+  WHERE date=CURRENT_DATE() 
+  ORDER BY id  desc LIMIT 1;
+  
+  IF questionID is not NULL THEN
+	SET finalid = questionID;
+  ELSE
+	select id INTO finalid
+	  FROM averyduffin_textingjournal.questiondate_dev 
+	  WHERE 1
+	  ORDER BY id  desc LIMIT 1;
+  END IF;
+  
+  
+  select id INTO userIDvar
+  FROM users_dev WHERE username=`phonenumber_i`;
+  
+
+  
+  INSERT INTO entries_dev 
+  (`date`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) 
+  VALUES (NOW(), 
+  `phonenumber_i`, 
+  `text_i`, 
+   finalID, 
+   userIDvar, 
+   `messageSid_i`, 
+   `smsid_i`, 
+   `accountsid_i`, 
+   `messagingservicesid_i`, 
+   `nummedia_i`);
+  
+	
+  
+END $$
+DELIMITER ;
+
+
+
+

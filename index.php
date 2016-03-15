@@ -110,6 +110,8 @@ $app->post('/send', 'sendMessage');
 
 $app->post('/authenticate', 'authenticate');
 $app->post('/checknumber', 'checkNumber');
+
+$app->post('/uploadPhoto', 'photoUpload');
 // PUT route
 //$app->put('/participants','addUser');
 $app->put('/receiveText','setText');
@@ -410,7 +412,7 @@ function setText(){
 		$questionid = 1;
 		
 		
-    $sql = "INSERT INTO entries_dev (`date`,`phonenumber`, `text`, `questionid`, `userid`, `messageSid`, `smsid`, `accountsid`, `messagingservicesid`, `nummedia`) VALUES (NOW(), :phonenumber, :text, (select id FROM questiondate_dev WHERE date=CURRENT_DATE() ORDER BY id  desc LIMIT 1), (select id FROM users_dev WHERE username=:phonenumber ) , :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
+    $sql = "call SetEntry( :text,:phonenumber, :messageSid, :smsid, :accountsid, :messagingservicesid, :nummedia)";
     try {
         $dbCon = getConnection();
         $stmt = $dbCon->prepare($sql);  
@@ -525,3 +527,24 @@ function addQuestionDate(){
     }
 }
 
+
+function photoUpload(){
+	global $app;
+	$app->response()->header("Content-Type", "application/json");
+	$allPostVars = $app->request->post();
+	$arrlength = count($_FILES);
+	$post = json_decode($app->request()->getBody());
+	
+	$name=$_FILES['file']["name"];
+	$otherName = $_FILES['file']["tmp_name"];
+	$datetime = date('YmdHis');
+	$folderName = $_POST["folder"];
+	if (move_uploaded_file($otherName, 'uploads/' . $folderName . '/' . $datetime . $name) === true) {
+
+		$imgs[] = array('url' => 'uploads/' . $folderName . '/' . $datetime . $name, 'name' => $datetime . $name);
+		echo json_encode($imgs);
+    }
+	else{
+		echo json_encode(array('error' => 'Error didnt upload file'));
+	}
+}
